@@ -92,7 +92,9 @@
     "build-www": "ts-node tool/build-www",
     "build-es": "tsc --module es2020 --outDir ./es",
     "build-lib": "tsc --outDir ./lib",
-    "build": "npx yarn run build-style && npx yarn run build-es && npx yarn run build-lib"
+    "build": "npx yarn run build-style && npx yarn run build-es && npx yarn run build-lib",
+    "lint": "tslint --project tsconfig.json",
+    "typecheck": "tsc --noEmit"
   },
   "packageManager": "yarn@1.22.22"
 }
