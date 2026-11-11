@@ -18,7 +18,7 @@ import { ITEM_TYPE_DEFAULT } from "../Constants";
 import _ from "lodash";
 import { DockContextType } from "../DockData";
 import { v4 as uuid } from "uuid";
-import { DragSource, DropTarget } from "react-dnd";
+import { DragSource, DropTarget, useDragDropManager } from "react-dnd";
 import classNames from "classnames";
 import { mergeTabGroups } from "../Utils";
 class RcDragDropDiv extends React.PureComponent {
@@ -364,6 +364,10 @@ class DndDragDropDiv extends React.PureComponent {
         }
         dockContext.dragDropDivProps.set(this._element, this.props);
     }
+    componentWillUnmount() {
+        var _a;
+        (_a = this.unsubscribeDragMove) === null || _a === void 0 ? void 0 : _a.call(this);
+    }
     render() {
         let _a = this.props, { getRef, children, className, getElement, directDragT, onDragStartT, onDragMoveT, onDragEndT, onDragOverT, onDragLeaveT, onDropT, onGestureStartT, onGestureMoveT, onGestureEndT, useRightButtonDragT, tabData, panelData, 
         // drag props
@@ -371,7 +375,7 @@ class DndDragDropDiv extends React.PureComponent {
         // drop props
         isOver, canDrop, connectDropTarget, isOverCurrent, itemType, 
         // dockContext prop
-        dockContext } = _a, others = __rest(_a, ["getRef", "children", "className", "getElement", "directDragT", "onDragStartT", "onDragMoveT", "onDragEndT", "onDragOverT", "onDragLeaveT", "onDropT", "onGestureStartT", "onGestureMoveT", "onGestureEndT", "useRightButtonDragT", "tabData", "panelData", "isDragging", "connectDragSource", "connectDragPreview", "isOver", "canDrop", "connectDropTarget", "isOverCurrent", "itemType", "dockContext"]);
+        dockContext, dragDropManager } = _a, others = __rest(_a, ["getRef", "children", "className", "getElement", "directDragT", "onDragStartT", "onDragMoveT", "onDragEndT", "onDragOverT", "onDragLeaveT", "onDropT", "onGestureStartT", "onGestureMoveT", "onGestureEndT", "useRightButtonDragT", "tabData", "panelData", "isDragging", "connectDragSource", "connectDragPreview", "isOver", "canDrop", "connectDropTarget", "isOverCurrent", "itemType", "dockContext", "dragDropManager"]);
         if (canDrag(this.props)) {
             if (className) {
                 className = `${className} drag-initiator`;
@@ -547,10 +551,26 @@ const dragSpec = {
         if (afterBeginDrag) {
             afterBeginDrag(props, monitor, component);
         }
+        if (props.onDragMoveT) {
+            component.unsubscribeDragMove = props.dragDropManager.getMonitor().subscribeToOffsetChange(() => {
+                const clientOffset = monitor.getClientOffset();
+                if (!clientOffset || monitor.getItem() !== item) {
+                    return;
+                }
+                const state = createDragState(clientOffset, component);
+                state.dx = (state.pageX - item.baseX) * item.scaleX;
+                state.dy = (state.pageY - item.baseY) * item.scaleY;
+                component.props.onDragMoveT(state);
+            });
+        }
         return item;
     },
     endDrag(props, monitor, component) {
         var _a, _b, _c, _d, _e, _f, _g;
+        if (component && component.unsubscribeDragMove) {
+            component.unsubscribeDragMove();
+            component.unsubscribeDragMove = undefined;
+        }
         removeBodyDraggingClass();
         const beforeEndDrag = (_b = (_a = props.dockContext.getDefaultDndSpec()) === null || _a === void 0 ? void 0 : _a.dragSourceSpec) === null || _b === void 0 ? void 0 : _b.beforeEndDrag;
         if (beforeEndDrag) {
@@ -564,7 +584,7 @@ const dragSpec = {
             state.dx = (state.pageX - item.baseX) * item.scaleX;
             state.dy = (state.pageY - item.baseY) * item.scaleY;
         }
-        if (props.onDragMoveT) {
+        if (clientOffset && props.onDragMoveT) {
             props.onDragMoveT(state);
         }
         if (props.onDragEndT) {
@@ -594,7 +614,8 @@ function dragCollect(connect, monitor) {
 const withDockContext = (WrappedComponent) => {
     return (props) => {
         const context = useContext(DockContextType);
-        return (React.createElement(WrappedComponent, Object.assign({ dockContext: context }, props)));
+        const dragDropManager = useDragDropManager();
+        return (React.createElement(WrappedComponent, Object.assign({ dockContext: context, dragDropManager: dragDropManager }, props)));
     };
 };
 const EnhancedDndDragDropDiv = _.flow(DragSource(({ dockContext }) => {

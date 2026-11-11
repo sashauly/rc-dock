@@ -547,10 +547,17 @@ export class DockLayout extends DockPortalManager {
         if (onLayoutChange) {
             savedLayout = Serializer.saveLayoutData(layoutData, this.props.saveTab, this.props.afterPanelSaved);
             layoutData.loadedFrom = savedLayout;
+            if (layout) {
+                // Consecutive imperative moves must see changes before controlled props commit.
+                this.tempLayout = layoutData;
+            }
             onLayoutChange(savedLayout, currentTabId, direction, additionalData);
             if (layout) {
                 // if layout prop is defined, we need to force an update to make sure it's either updated or reverted back
                 queueMicrotask(() => {
+                    if (!this._isMounted) {
+                        return;
+                    }
                     flushSync(() => {
                         this.forceUpdate();
                     });
