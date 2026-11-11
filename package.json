@@ -34,6 +34,11 @@
   "module": "es/index",
   "types": "lib/index.d.ts",
   "license": "Apache-2.0",
+  "files": [
+    "lib/",
+    "es/",
+    "dist/"
+  ],
   "dependencies": {
     "classnames": "^2.5.1",
     "lodash": "^4.17.21",
@@ -87,6 +92,9 @@
     "build-www": "ts-node tool/build-www",
     "build-es": "tsc --module es2020 --outDir ./es",
     "build-lib": "tsc --outDir ./lib",
-    "build": "npx yarn run build-style && npx yarn run build-es && npx yarn run build-lib"
-  }
+    "build": "npx yarn run build-style && npx yarn run build-es && npx yarn run build-lib",
+    "lint": "tslint --project tsconfig.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "packageManager": "yarn@1.22.22"
 }
