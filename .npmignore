@@ -27,3 +27,8 @@ build
 /yarn.lock
 /yarn-error.log
 /.parcel-cache
+/test
+/vitest.config.mts
+/tsconfig.json
+/tsconfig.build.json
+/tsconfig.test.json

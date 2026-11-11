@@ -3,7 +3,7 @@
     "./src/DockLayout.tsx",
     "./src/DockData.ts"
   ],
-  "tsconfig": "tsconfig.json",
+  "tsconfig": "tsconfig.build.json",
   "out": "./temp-doc",
   "excludePrivate": true,
   "excludeProtected": true,

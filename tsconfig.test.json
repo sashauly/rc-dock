@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "rootDir": ".",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "useDefineForClassFields": false,
+    "noUncheckedSideEffectImports": true,
+    "declaration": false,
+    "noEmit": true,
+    "types": ["node", "vitest/browser", "@vitest/browser-playwright"]
+  },
+  "include": ["vitest.config.mts", "test/**/*.ts", "test/**/*.tsx"],
+  "exclude": ["node_modules", "lib", "es", "dist"]
+}
