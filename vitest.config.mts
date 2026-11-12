@@ -1,5 +1,6 @@
 import {defineConfig} from 'vitest/config';
 import {playwright} from '@vitest/browser-playwright';
+import {beginPointerDrag, movePointer, finishPointerDrag} from './test/fixtures/pointer.commands';
 
 export default defineConfig({
   test: {
@@ -35,6 +36,7 @@ export default defineConfig({
             instances: [{browser: 'chromium'}],
             viewport: {width: 1024, height: 768},
             screenshotDirectory: '.vitest/screenshots',
+            commands: {beginPointerDrag, movePointer, finishPointerDrag},
           },
         },
       },

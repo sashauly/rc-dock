@@ -376,6 +376,7 @@ export class DockPanel extends React.PureComponent {
         });
     }
     componentDidMount() {
+        this._unmounted = false;
         this.tabBarResizeObserver = this.createTabBarResizeObserver();
         this.tabBarResizeObserver.observe(this.getTabBarElement());
         const panelData = this.context.find(this.props.panelData.id);
@@ -397,6 +398,9 @@ export class DockPanel extends React.PureComponent {
     }
     updatePanelData() {
         var _a;
+        if (this._unmounted) {
+            return;
+        }
         const { panelData } = this.props;
         const tabPosition = getPanelTabPosition(panelData);
         this.context.updatePanelData(panelData.id, Object.assign(Object.assign({}, panelData), { headerSize: this.getHeaderSize(tabPosition) }), 'configure-panel');

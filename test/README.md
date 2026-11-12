@@ -51,12 +51,14 @@ Consumer declaration regressions, such as #8, need compiler checks in addition t
 - `fixtures/`: typed, deterministic application fixtures shared by DOM and browser tests.
 - `setup/`: environment-specific cleanup and platform fixtures.
 
-The initial tests exercise layout serialization, tab activation and native tab reordering. Bug-specific coverage belongs with the corresponding fix; this infrastructure does not fix #2–#9 or #11.
+Tests exercise layout serialization, tab activation and native tab reordering. The #11 regressions also cover consecutive controlled operations, parent rejection, delayed measurements after unmount, live movement/resizing, scaling, missing final offsets, subscription cleanup and external maximized portals. Issues #2–#9 remain separate.
 
 jsdom has no layout engine. Its ResizeObserver fixture does not simulate layout or deliver measurements. Assert geometry in the browser project, which loads source SCSS and uses real browser APIs. Keep platform stubs scoped to jsdom; do not replace the drag engine or the methods whose behavior a test is meant to verify.
 
 Browser tests use Vitest's Playwright provider and `userEvent` for native input. They can also use typed browser commands when a regression needs precise pointer movement. Assert tab ownership/order, position/size and callback outcomes through the public layout API and rendered UI. A final layout assertion cannot establish that resizing updated before release; live-resize regressions must also observe the intermediate state.
 
-Screenshot baselines are not part of the initial suite. Add selected visual comparisons later when the expected indicator/overlay appearance is stable. Failed browser-test artifacts are kept in `.vitest/` and ignored by Git.
+`pointer.commands.ts` supplies typed begin/move/finish commands that leave the mouse held between calls. They use application CSS coordinates and account for Vitest scaling its tester iframe. Browser cleanup releases a pending drag even when an assertion fails. React DnD monitor instrumentation observes the real offset-subscription API, and the missing-offset regression clears the offset through the real manager actions before native cancellation.
+
+Screenshot baselines are not part of the initial suite. Add selected visual comparisons later when the expected indicator/overlay appearance is stable. Failed browser-test artifacts are kept in `.vitest/` and `.vitest-attachments/` and ignored by Git.
 
 CI/CD, publishing and package-manager version policies remain separate work.

@@ -19,3 +19,4 @@ build
 /yarn-error.log
 /.parcel-cache
 /.vitest
+/.vitest-attachments

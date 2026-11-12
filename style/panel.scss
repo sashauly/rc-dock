@@ -153,6 +153,8 @@ body.dock-dragging {
 }
 
 .dock-mbox {
+  position: absolute;
+  inset: 0;
   z-index: 250;
   width: 100%;
   height: 100%;

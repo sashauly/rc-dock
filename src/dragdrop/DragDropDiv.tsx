@@ -26,6 +26,7 @@ import {
   DropTargetConnector,
   DropTargetMonitor,
   DropTargetSpec,
+  useDragDropManager,
   XYCoord,
   ConnectDragPreview
 } from "react-dnd";
@@ -66,6 +67,7 @@ export interface DragDropDivProps extends React.HTMLAttributes<HTMLDivElement> {
 
 interface WithDockContextProps {
   dockContext: DockContext;
+  dragDropManager: ReturnType<typeof useDragDropManager>;
 }
 
 interface DndDragDropDivProps extends DragDropDivProps, WithDockContextProps {
@@ -426,6 +428,7 @@ class RcDragDropDiv extends React.PureComponent<DragDropDivProps, any> {
 }
 
 class DndDragDropDiv extends React.PureComponent<DndDragDropDivProps, any> {
+  unsubscribeDragMove?: () => void;
   _element: HTMLElement;
   ownerDocument: Document;
   dragType: DragManager.DragType = "left";
@@ -479,6 +482,10 @@ class DndDragDropDiv extends React.PureComponent<DndDragDropDivProps, any> {
     dockContext.dragDropDivProps.set(this._element, this.props);
   }
 
+  componentWillUnmount() {
+    this.unsubscribeDragMove?.();
+  }
+
   render(): React.ReactNode {
     let {
       getRef, children, className, getElement,
@@ -489,7 +496,7 @@ class DndDragDropDiv extends React.PureComponent<DndDragDropDivProps, any> {
       // drop props
       isOver, canDrop, connectDropTarget, isOverCurrent, itemType,
       // dockContext prop
-      dockContext,
+      dockContext, dragDropManager,
       ...others
     } = this.props;
 
@@ -718,10 +725,27 @@ const dragSpec: DragSourceSpec<DndDragDropDivProps, DragObject, DropResult> = {
       afterBeginDrag(props, monitor, component);
     }
 
+    if (props.onDragMoveT) {
+      component.unsubscribeDragMove = props.dragDropManager.getMonitor().subscribeToOffsetChange(() => {
+        const clientOffset = monitor.getClientOffset();
+        if (!clientOffset || monitor.getItem() !== item) {
+          return;
+        }
+        const state = createDragState(clientOffset, component);
+        state.dx = (state.pageX - item.baseX) * item.scaleX;
+        state.dy = (state.pageY - item.baseY) * item.scaleY;
+        component.props.onDragMoveT(state);
+      });
+    }
+
     return item;
   },
 
   endDrag(props, monitor, component) {
+    if (component && component.unsubscribeDragMove) {
+      component.unsubscribeDragMove();
+      component.unsubscribeDragMove = undefined;
+    }
     removeBodyDraggingClass();
 
     const beforeEndDrag = props.dockContext.getDefaultDndSpec()?.dragSourceSpec?.beforeEndDrag;
@@ -740,7 +764,7 @@ const dragSpec: DragSourceSpec<DndDragDropDivProps, DragObject, DropResult> = {
       state.dy = (state.pageY - item.baseY) * item.scaleY;
     }
 
-    if (props.onDragMoveT) {
+    if (clientOffset && props.onDragMoveT) {
       props.onDragMoveT(state);
     }
 
@@ -778,10 +802,12 @@ function dragCollect(connect: DragSourceConnector, monitor: DragSourceMonitor) {
 const withDockContext = <P extends WithDockContextProps = WithDockContextProps>(WrappedComponent: React.ComponentType<P>) => {
   return (props: Omit<P, keyof WithDockContextProps>) => {
     const context = useContext(DockContextType);
+    const dragDropManager = useDragDropManager();
 
     return (
       <WrappedComponent
         dockContext={context}
+        dragDropManager={dragDropManager}
         {...(props as P)}
       />
     );
